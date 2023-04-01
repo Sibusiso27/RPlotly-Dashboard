@@ -158,16 +158,6 @@ body <- dashboardBody(
   fluidRow(column(12,
                   div(style = "height:400px;margin-left:-20px;padding-top: 10px;margin-bottom: 10px;", plotlyOutput("bubbleChart"),
                       img(id = "legend3", src='legend.png', align = "center"))))
-  #fluidRow(column(12,
-  #              div(style = "height:400px;margin-left:-20px;padding-top: 10px;margin-bottom: 10px;", jobsTreeMap)))
-  
-  #fluidRow(div(style = "height:500px;margin-left:-20px;padding-top: 10px;", plotlyOutput("boxWhiskerOutPlot"))),
-
-  #fluidRow(div(style = "height:400px;margin-left:-20px;padding-top: 10px;", plotlyOutput("barChartPlot"))),
-  
-  #fluidRow(column(12, valueBox("", "", width = 12, color = "purple")))
-  #          column(3, valueBox(format(Sys.Date(), "%d %b %y"), "Latest COB Results", width = 12, color = "yellow")),
-  #          column(6, valueBox(format(Sys.Date(), "%d %b %y"), "Latest COB Results", width = 12, color = "red")))
 )
 
 ############### ----- UI ----- ############
