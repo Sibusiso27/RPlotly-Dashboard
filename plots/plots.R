@@ -2,7 +2,6 @@
 ################################## Package Import #################################
 
 library(plotly)
-library(reshape2)
 library(colorRamps)
 library(treemap)
 library(zoo)

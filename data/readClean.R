@@ -1,9 +1,7 @@
 
-###################################################################################
-#                                                                                 #
-#                             Import + Transform + Clean                          #
-#                                                                                 #
-###################################################################################
+##############################Import + Transform + Clean###########################
+
+library(reshape2)
 
 #Read data using the db connection R script
 #source(file = "data/dbConnection.R")
@@ -22,14 +20,18 @@ startOutliers <- unique(dat[which(dat$PROCESS_NAME == 'START_01' &
                                     dat$START_TIME_MIDNIGHT >= 21600 & dat$START_TIME_MIDNIGHT < 74700), "COB_DATE"])
 dat <- dat[!(dat$COB_DATE %in% startOutliers),]
 
-#Exclude days where START_01 is not the starting script OR START_01 occurs multiple times during the day
+#Exclude days where START_01 is not the starting script
 minStartTime <- dcast(data = dat, formula = COB_DATE ~ ., fun.aggregate = min, value.var = "TOTAL_DURATION")
 names(minStartTime) <- c("COB_DATE", "TOTAL_DURATION")
 
 startScript <- merge(minStartTime, dat[, c("COB_DATE", "TOTAL_DURATION", "PROCESS_NAME")], 
-                     by = c("COB_DATE", "TOTAL_DURATION"), all.x = T, all.y = F)
+                     by = c("COB_DATE", "TOTAL_DURATION"), all.x = T, all.y = F, no.dups = F)
 
 dat <- dat[!(dat$COB_DATE %in% startScript[startScript$PROCESS_NAME != 'START_01', "COB_DATE"]),]
+
+#Exclude days where START_01 occurs multiple times during the day
+allStart <- dat[dat$PROCESS_NAME == 'START_01', "COB_DATE"]
+dat <- dat[!(dat$COB_DATE %in% unique(allStart[duplicated(allStart)])),]
 
 #Save data
 write.table(x = dat, file = "data/datBasicClean.csv", quote = F, sep = ",", row.names = F, dec = ".")
