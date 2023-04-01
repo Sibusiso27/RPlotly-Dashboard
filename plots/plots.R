@@ -3,6 +3,7 @@
 
 library(plotly)
 library(colorRamps)
+library(reshape2)
 library(treemap)
 library(zoo)
 library(dplyr)
@@ -33,17 +34,8 @@ cobDateRange <- format(range(dat$COB_DATE), "%b %Y")
 
 #Only consider start time from 20:45 and convert to hours 
 #Start time for each day
-startTime <- dat[which(dat$PROCESS_NAME == 'START_01'), c("COB_DATE", "START_TIME_MIDNIGHT")]
-startTime$START_TIME_MIDNIGHT <- (startTime$START_TIME_MIDNIGHT - 74700)/3600
-
-#Clean Data
-# dat <- dat[dat$COB_DATE %in% startTime$COB_DATE,]
-# dat <- dat[!(dat$PROCESS_NAME %in% c('INTRADAY_01', 'REGENERATION_01', 
-#                                      'REGENERATION_02', 'REGENERATION_05', 
-#                                      'REGENERATION_03', 'REPORT_PREP_04', 
-#                                      'REGENERATION_04', 'CONSOLIDATION_01', 
-#                                      'DETAILED_CONSO_01', 'RESULTS_01', 
-#                                      'REPAIR_01')),]
+startTime <- dat[which(dat$PROCESS_NAME == 'START_01'), c("COB_DATE", "TOTAL_DURATION")]
+#startTime$TOTAL_DURATION <- (startTime$TOTAL_DURATION - 74700)/3600
 
 monthLabel <- unique(format(startTime$COB_DATE,"%b %Y"))
 n1 <- length(monthLabel)
@@ -71,11 +63,11 @@ nstartTime <- 1:nrow(startTime)
 
 candlestick <- plot_ly(x = dat$COB_DATE, height = 600, hoverlabel = list(font = list(family = "Montserrat, sans-serif", size = 9)))  %>%
   add_trace(x = endTime$COB_DATE, y = endTime$., type = 'bar', name = "End", marker = list(color = '#1f90b4')) %>%
-  add_trace(x = startTime$COB_DATE, y = startTime$START_TIME_MIDNIGHT, type = 'bar', name = "Start", marker = list(color = '#ca2341')) %>%
+  add_trace(x = startTime$COB_DATE, y = startTime$TOTAL_DURATION, type = 'bar', name = "Start", marker = list(color = '#ca2341')) %>%
   add_lines(x = endTime$COB_DATE, y = stats::filter(endTime$., rep(1/10, 10), side=2), 
            line=list(shape = 'spline', smoothing = 1.5, dash = "solid", width = 3, color = "#37c837"), showlegend = T, 
            name = "<i>end moving average</i>") %>%
-  add_lines(x = startTime$COB_DATE, y = stats::filter(startTime$START_TIME_MIDNIGHT, rep(1/10, 10), side=2), 
+  add_lines(x = startTime$COB_DATE, y = stats::filter(startTime$TOTAL_DURATION, rep(1/10, 10), side=2), 
             line=list(shape = 'spline', smoothing = 1.5, dash = "solid", width = 1, color = "#b8de41"), showlegend = T,
             name = "<i>start moving average</i>") %>%
   add_lines(x = endTime$COB_DATE, 
@@ -85,10 +77,10 @@ candlestick <- plot_ly(x = dat$COB_DATE, height = 600, hoverlabel = list(font = 
             y = mean(endTime$.), 
             line = list(dash = "solid", width = 4, color = "#FFA000"), showlegend = T, name = "<i>end average</i>") %>%
   # add_lines(x = startTime$COB_DATE, 
-  #           y = mean(startTime$START_TIME_MIDNIGHT), 
+  #           y = mean(startTime$TOTAL_DURATION), 
   #           line = list(dash = "solid", width = 1, color = "#c0c0c0"), showlegend = T, name = "<i>start average</i>") %>%
   layout(barmode='overlay',
-         title = "<b>COB Total Duration</b>",
+         title = "<b>Overnight Process Total Duration</b>",
          titlefont = list(family = "Montserrat, sans-serif", size = 16, color = 'rgb(0, 0, 0)'),
          xaxis = list(title = "Date", tickfont = list(family = "Montserrat, sans-serif", size = 12, color = 'rgb(0, 0, 0)'),
                       titlefont = list(family = "Montserrat, sans-serif", size = 14, color = 'rgb(0, 0, 0)'),
@@ -166,7 +158,7 @@ startEndTable <- plot_ly(
       height = 30,
       font = list(color = c('white', '#1B2127'), size = 12)
     )) %>%
-  layout( title = "<b>COB Process Start and End times per day (with min and max times)</b>",
+  layout( title = "<b>Overnight Process Start and End times per day (with min and max times)</b>",
           titlefont = list(family = "Montserrat, sans-serif", size = 16, color = 'rgb(0, 0, 0)'))
 
 
@@ -335,7 +327,7 @@ reportsReadyHisto <- plot_ly(hoverlabel = list(font = list(family = "Montserrat,
 ################################### Box Plots #####################################
 
 #Box plots
-boxDat <- dat[-which(dat$PROCESS_PHASE == "Adhoc"),]
+boxDat <- dat[-which(dat$PROCESS_PHASE == "Maintenance"),]
 boxDat <- boxDat[-which(boxDat$PROCESS_DURATION < 0.25),]
 boxDat <- boxDat[-which(boxDat$PROCESS_DURATION > 4),]
 
@@ -355,11 +347,11 @@ boxWhiskerPlot <- plot_ly(boxDat, x = ~PROCESS_PHASE, y = ~PROCESS_DURATION, col
 
 ################################### Gantt chart - Weekday ###################################
 
-weekDayGantt <- dat[which(dat$COB_DATE == as.Date('2019-07-02') & dat$PROCESS_NAME != 'PURGE_07'), ]
+weekDayGantt <- dat[which(dat$COB_DATE == as.Date('2019-06-27')), ]
 weekDayGantt <- weekDayGantt[-which(weekDayGantt$PROCESS_DURATION <= 1/60),]
 weekDayGantt$color <- as.vector(phaseColors[match(weekDayGantt$PROCESS_PHASE, names(phaseColors))])
 
-processGanttWeekDay <- plot_ly(height = 900)
+processGanttWeekDay <- plot_ly(height = 500)
 
 for(i in 1:(nrow(weekDayGantt) - 1)){
   processGanttWeekDay <- add_trace(processGanttWeekDay, type = "scatter",
@@ -368,7 +360,7 @@ for(i in 1:(nrow(weekDayGantt) - 1)){
                  mode = "lines",
                  line = list(
                    #color = paste0("rgba(", sample(1:255, 1),",", sample(1:255,1), ",", sample(1:255,1), ",1)"), width = 20),
-                   color = weekDayGantt$color[i], width = 20),
+                   color = weekDayGantt$color[i], width = 25),
                  name = weekDayGantt$PROCESS_NAME[i],
                  showlegend = F,
                  hoverinfo = "text",
@@ -384,29 +376,28 @@ for(i in 1:(nrow(weekDayGantt) - 1)){
 }
 
 processGanttWeekDay <- layout(processGanttWeekDay,
-                      title = paste0("<b>Weekday Process Duration - ",  paste(c(substring(weekDayGantt$DAY[1], 1, 1), tolower(substring(weekDayGantt$DAY[1], 2))), collapse=''), 
+                      title = paste0("<b>Weekday Process Gantt chart - ",  paste(c(substring(weekDayGantt$DAY[1], 1, 1), tolower(substring(weekDayGantt$DAY[1], 2))), collapse=''), 
                       ", ", format(as.Date(weekDayGantt$COB_DATE[1]), "%d %b %Y"), "</b>"),
                       titlefont = list(family = "Montserrat, sans-serif", size = 16, color = 'rgb(0, 0, 0)'),
-            xaxis = list(title = "", showgrid = F, tickfont = list(family = "Montserrat, sans-serif", size = 12, color = 'rgb(0, 0, 0)'), gridcolor = 'ffff'),
-            yaxis = list(showgrid = T, tickfont = list(family = "Montserrat, sans-serif", size = 12, color = weekDayGantt$color, gridcolor = 'ffff'),
-                         tickmode = "array", tickvals = 1:nrow(weekDayGantt), ticktext = weekDayGantt$PROCESS_NAME),
-            legend = list(font = list(size = 10, family = "Montserrat, sans-serif")),
-            plot_bgcolor='rgba(241, 241, 241, 0.8)')
+            xaxis = list(title = "", showgrid = T, tickfont = list(family = "Montserrat, sans-serif", size = 12, color = 'rgb(0, 0, 0)')),
+            yaxis = list(showgrid = T, tickfont = list(family = "Montserrat, sans-serif", size = 12, color = weekDayGantt$color),
+                         showticklabels = F),
+            legend = list(font = list(size = 10, family = "Montserrat, sans-serif")))
 
 
 #################################### Gantt chart - Friday ####################################
 
-weekEndGantt <- dat[which(dat$COB_DATE == as.Date('2019-06-28') & dat$PROCESS_NAME != 'PURGE_07'), ]
+weekEndGantt <- dat[which(dat$COB_DATE == as.Date('2019-07-05')), ]
 weekEndGantt <- weekEndGantt[-which(weekEndGantt$PROCESS_DURATION <= 4/60),]
 weekEndGantt$color <- as.vector(phaseColors[match(weekEndGantt$PROCESS_PHASE, names(phaseColors))])
 
-processGanttWeekEnd <- plot_ly(height = 900)
+processGanttWeekEnd <- plot_ly(height = 500)
 for(i in 1:(nrow(weekEndGantt) - 1)){
   processGanttWeekEnd <- add_trace(processGanttWeekEnd, type = "scatter",
                  x = c(weekEndGantt$START_TIME[i] - 7200, weekEndGantt$END_TIME[i] - 7200),  # x0, x1
                  y = c(i, i),  # y0, y1
                  mode = "lines",
-                 line = list(color = weekEndGantt$color[i], width = 20),
+                 line = list(color = weekEndGantt$color[i], width = 25),
                  name = weekEndGantt$PROCESS_NAME[i],
                  showlegend = F,
                  hoverinfo = "text",
@@ -422,15 +413,14 @@ for(i in 1:(nrow(weekEndGantt) - 1)){
 }
 
 processGanttWeekEnd <- layout(processGanttWeekEnd,
-                              title = paste0("<b>Weekend Process Duration - ",  
+                              title = paste0("<b>Friday Process Duration - ",  
                                              paste(c(substring(weekEndGantt$DAY[1], 1, 1), tolower(substring(weekEndGantt$DAY[1], 2))), collapse=''), 
                       ", ", format(as.Date(weekEndGantt$COB_DATE[1]), "%d %b %Y"), "</b>"),
                       titlefont = list(family = "Montserrat, sans-serif", size = 16, color = 'rgb(0, 0, 0)'),
-                      xaxis = list(title = "", showgrid = F, tickfont = list(family = "Montserrat, sans-serif", size = 12, color = 'rgb(0, 0, 0)')),
-                      yaxis = list(showgrid = F, tickfont = list(family = "Montserrat, sans-serif", size = 12, color = weekEndGantt$color),
-                         tickmode = "array", tickvals = 1:nrow(weekEndGantt), ticktext = weekEndGantt$PROCESS_NAME),
-                      legend = list(font = list(size = 10, family = "Montserrat, sans-serif")),
-                      plot_bgcolor='rgba(241, 241, 241, 0.8)')
+                      xaxis = list(title = "", showgrid = T, tickfont = list(family = "Montserrat, sans-serif", size = 12, color = 'rgb(0, 0, 0)')),
+                      yaxis = list(showgrid = T, tickfont = list(family = "Montserrat, sans-serif", size = 12, color = weekEndGantt$color),
+                                   showticklabels = F),
+                      legend = list(font = list(size = 10, family = "Montserrat, sans-serif")))
 
 
 ################################## Phases Plots ################################
@@ -713,13 +703,7 @@ jobsTreeMap <- treemap(data,
 
 bubbleDat <- aggregate(dat$PROCESS_DURATION, by=list(Process = dat$PROCESS_NAME, Phase = dat$PROCESS_PHASE), FUN = mean)
 bubbleDat <- bubbleDat[-which(bubbleDat$x < 1e-1),]
-bubbleDat$color <- ifelse(bubbleDat$Phase == "Computation", "#00A2E8", 
-                          ifelse(bubbleDat$Phase == "Control", "#880015",
-                                 ifelse(bubbleDat$Phase == "Housekeep", "#7F7F7F",
-                                        ifelse(bubbleDat$Phase == "Initiation", "#FF7F27",
-                                               ifelse(bubbleDat$Phase == "Maintenance", "#22B14C",
-                                                      ifelse(bubbleDat$Phase == "Planning", "#3F48CC",
-                                                             ifelse(bubbleDat$Phase == "Report Prep", "#D62728", "#A349A4")))))))
+bubbleDat$color <- as.vector(phaseColors[match(bubbleDat$Phase, names(phaseColors))])
 
 bubbleDat$y <- sample(1:nrow(bubbleDat))
 bubbleDat$Process <- ifelse(bubbleDat$x < 0.5, "", bubbleDat$Process)
@@ -733,7 +717,7 @@ bubblePlot <- plot_ly(bubbleDat, x = ~y, text=~Process, y = ~x, type = 'scatter'
   layout(
          title = "<b>Phase Bubble Scatter Plot</b>",
          titlefont = list(family = "Montserrat, sans-serif", size = 16, color = 'rgb(0, 0, 0)'),
-         xaxis = list(showgrid = T, showline = FALSE, showticklabels = FALSE, zeroline = FALSE, title = ""),
-         yaxis = list(showgrid = T, showline = FALSE, showticklabels = FALSE, zeroline = TRUE, title = ""),
+         xaxis = list(showgrid = F, showline = FALSE, showticklabels = FALSE, zeroline = FALSE, title = ""),
+         yaxis = list(showgrid = F, showline = FALSE, showticklabels = FALSE, zeroline = TRUE, title = ""),
          showlegend = F)
 

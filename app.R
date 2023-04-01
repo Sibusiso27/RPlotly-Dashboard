@@ -27,13 +27,13 @@ body <- dashboardBody(
   fluidRow(id = "row1", div(style = "height:600px;margin-left:-20px;padding-top: 10px;color: white;", 
                
                #Text1
-               div(style = "height: auto;left: 48%;top: 9.7%;position: absolute;z-index: 10000;background: #ffffff00;padding: 2px;", 
+               div(style = "height: auto;left: 48%;top: 8.3%;position: absolute;z-index: 10000;background: #ffffff00;padding: 2px;", 
                    div(style = "text-align: center;font-size: 11px;", "Runtime averages"),
                    div(style = "text-align: center;font-size: 16px;font-weight: bold;", 
                        textOutput("durationStats"))),
               
                #Text2
-               div(style = "height: auto;left: 15%;top: 9.7%;position: absolute;z-index: 10000;width: 160px;background: #ffffff00;padding: 2px;", 
+               div(style = "height: auto;left: 15%;top: 8.3%;position: absolute;z-index: 10000;width: 160px;background: #ffffff00;padding: 2px;", 
                    div(style = "text-align: center;font-size: 11px;", "This data is"),
                    div(style = "text-align: center;font-size: 11px;float: left;padding-top: 6px;", "from"),
                    div(style = "text-align: center;font-size: 16px;font-weight: bold;", textOutput("range1")),
@@ -41,12 +41,12 @@ body <- dashboardBody(
                    div(style = "text-align: center;font-size: 16px;font-weight: bold;", textOutput("range2"))),
 
                #Text3
-               div(style = "height: auto;left: 75%;top: 9.6%;position: absolute;z-index: 10000;width: 170px;background: #ffffff00;padding: 2px;", 
-                   div(style = "text-align: center;font-size: 11px;", "On average the overnight process"),
+               div(style = "height: auto;left: 75%;top: 8.3%;position: absolute;z-index: 10000;width: 170px;background: #ffffff00;padding: 2px;", 
+                   div(style = "text-align: center;font-size: 11px;width: 200px;", "On average the overnight process"),
                    div(style = "text-align: center;font-size: 11px;float: left;padding-top: 6px;", "starts at"),
-                   div(style = "text-align: center;font-size: 16px;font-weight: bold;", textOutput("timeRange1")),
+                   div(style = "text-align: center;font-size: 16px;font-weight: bold;", textOutput("timeStart")),
                    div(style = "text-align: center;font-size: 11px;float: left;padding-top: 6px;", "and ends at"),
-                   div(style = "text-align: center;font-size: 16px;font-weight: bold;", textOutput("timeRange2")),
+                   div(style = "text-align: center;font-size: 16px;font-weight: bold;", textOutput("timeEnd")),
                    div(style = "text-align: center;font-size: 11px;", p("the following day"))),
               
                #Candle Plot
@@ -132,7 +132,7 @@ body <- dashboardBody(
                   div(class = "phasesPlots", plotlyOutput("initWeekDayChart")),
                   div(class = "phasesPlots", plotlyOutput("planWeekDayChart")),
                   div(class = "phasesPlots", plotlyOutput("maintenWeekDayChart")),
-                  div(class = "phasesPlots", plotlyOutput("techWeekDayChart")),
+                  #div(class = "phasesPlots", plotlyOutput("techWeekDayChart")),
                   div(class = "phasesPlots", plotlyOutput("houseWeekDayChart"))),
            column(6,
                   div(class = "phasesPlots", plotlyOutput("reportPrepWeekEndChart")),
@@ -142,18 +142,19 @@ body <- dashboardBody(
                   div(class = "phasesPlots", plotlyOutput("initWeekEndChart")),
                   div(class = "phasesPlots", plotlyOutput("planWeekEndChart")),
                   div(class = "phasesPlots", plotlyOutput("maintenWeekEndChart")),
-                  div(class = "phasesPlots", plotlyOutput("techWeekEndChart")),
+                  #div(class = "phasesPlots", plotlyOutput("techWeekEndChart")),
                   div(class = "phasesPlots", plotlyOutput("houseWeekEndChart")))),
 
   #Weekday Gantt
-  fluidRow(div(style = "height:900px;margin-left:-20px;padding-top: 10px;", 
-               plotlyOutput("weekDayScriptGanttPlot")
-               )),
+  fluidRow(div(style = "height:500px;margin-left:-20px;padding-top: 10px;margin-bottom: 10px;", 
+               plotlyOutput("weekDayProcessGanttPlot"),
+               img(id = "legend2", src='legend.png', align = "center"))),
   
   #Weekend Gantt
-  fluidRow(div(style = "height:900px;margin-left:-20px;padding-top: 10px;", 
-               plotlyOutput("weekEndScriptGanttPlot")
-               )),
+  fluidRow(div(style = "height:500px;margin-left:-20px;padding-top: 10px;margin-bottom: 10px;", 
+               plotlyOutput("weekEndProcessGanttPlot"),
+               img(id = "legend2", src='legend.png', align = "center"))),
+  
   #Bubble
   fluidRow(column(12,
                   div(style = "height:400px;margin-left:-20px;padding-top: 10px;margin-bottom: 10px;", plotlyOutput("bubbleChart"),
@@ -219,12 +220,12 @@ server <- function(session, input, output) {
   })
   
   #Gantt plots
-  output$weekDayScriptGanttPlot <- renderPlotly({
+  output$weekDayProcessGanttPlot <- renderPlotly({
     processGanttWeekDay
   })
   
-  output$weekEndScriptGanttPlot <- renderPlotly({
-    processGanttWeekDay
+  output$weekEndProcessGanttPlot <- renderPlotly({
+    processGanttWeekEnd
   })
   
   output$boxWhiskerOutPlot <- renderPlotly({
@@ -347,7 +348,7 @@ server <- function(session, input, output) {
   })
   
   output$durationStats <- renderText({
-    toTime2(round(mean(endTime$.) - mean(startTime$START_TIME_MIDNIGHT), 2))
+    toTime2(mean(endAverage - startAverage))
   })
   
   output$range1 <- renderText({
@@ -358,12 +359,12 @@ server <- function(session, input, output) {
     cobDateRange[2]
   })
   
-  output$timeRange1 <- renderText({
-    toTime(1245 + mean(startTime$START_TIME_MIDNIGHT) * 60)
+  output$timeStart <- renderText({
+    toTime(1245 + mean(startAverage)*60,T)
   })
   
-  output$timeRange2 <- renderText({
-    toTime(mean(endTime$.) * 60 - 195)
+  output$timeEnd <- renderText({
+    toTime(mean(endAverage)*60 - 195, T)
   })
   
   output$reportAvalTime <- renderText({

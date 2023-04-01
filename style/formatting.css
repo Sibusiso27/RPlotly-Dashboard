@@ -277,24 +277,24 @@ h6 {
 #legend2 {
     vertical-align: middle;
     /* z-index: 10000; */
-    margin-top: -13px;
-    margin-left: 330px;
-    height: 30px;
+    margin-top: 8%;
+    margin-left: 15%;
+    height: 17px;
 }
 
 #legend3 {
     vertical-align: middle;
     /* z-index: 10000; */
-    margin-top: -5px;
-    margin-left: 330px;
-    height: 30px;
+    margin-top: -15px;
+    margin-left: 15%;
+    height: 17px;
 }
 
 #headTitle,
 #headTitle2 {
     text-align: center;
     background: #1F77B4;
-    border-radius: 25px;
+    border-radius: 10px;
     color: white;
     box-shadow: 0px 0px 10px rgba(29, 52, 73, 0.7);
     margin-bottom: 30px;
