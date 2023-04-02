@@ -14,9 +14,9 @@ library(dplyr)
 source(file = "misc/helpers.R")
 
 #Colors
-phaseColors <- c("#00A2E8", "#D62728", "#7F7F7F", "#A349A4", "#3F48CC", "#880015", "#FF7F27", "#22B14C", "#BF5B16")
-names(phaseColors) <- c("Computation", "Control", "Housekeep", "Initiation", "Maintenance", "Planning", 
-                                                  "Report Prep", "Report Run", "Technical")
+phaseColors <- setNames(c("#00A2E8", "#D62728", "#7F7F7F", "#A349A4", "#3F48CC", "#880015", "#FF7F27", "#22B14C", "#BF5B16"),
+                        c("Computation", "Control", "Housekeep", "Initiation", "Maintenance", "Planning", 
+                                                  "Report Prep", "Report Run", "Technical"))
 #Data
 #source(file = "data/readClean.R")
 dat <- read.csv("data/datBasicClean.csv", header = T, sep = ",", stringsAsFactors = F)
@@ -327,12 +327,16 @@ reportsReadyHisto <- plot_ly(hoverlabel = list(font = list(family = "Montserrat,
 ################################### Box Plots #####################################
 
 #Box plots
+daysColors <- setNames(c("#72CEA1", "#3991C9", "#FFC600", "#D95566", "#9E59A1"), 
+                       c("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"))
+
 boxDat <- dat[-which(dat$PROCESS_PHASE == "Maintenance"),]
 boxDat <- boxDat[-which(boxDat$PROCESS_DURATION < 0.25),]
 boxDat <- boxDat[-which(boxDat$PROCESS_DURATION > 4),]
+boxDat$COLOR <- as.vector(phaseColors[match(boxDat$DAY, names(daysColors))])
 
-boxWhiskerPlot <- plot_ly(boxDat, x = ~PROCESS_PHASE, y = ~PROCESS_DURATION, color = ~DAY, type = "box", 
-                          height = 500,
+boxWhiskerPlot <- plot_ly(x = boxDat$PROCESS_PHASE, y = boxDat$PROCESS_DURATION, color = boxDat$DAY, type = "box", 
+                          height = 500, fillcolor = boxDat$COLOR,
                           hoverlabel = list(font = list(family = "Montserrat, sans-serif", size = 9))) %>%
   layout(
     boxmode = "group",
@@ -351,7 +355,7 @@ weekDayGantt <- dat[which(dat$COB_DATE == as.Date('2019-06-27')), ]
 weekDayGantt <- weekDayGantt[-which(weekDayGantt$PROCESS_DURATION <= 1/60),]
 weekDayGantt$color <- as.vector(phaseColors[match(weekDayGantt$PROCESS_PHASE, names(phaseColors))])
 
-processGanttWeekDay <- plot_ly(height = 500)
+processGanttWeekDay <- plot_ly(height = 600)
 
 for(i in 1:(nrow(weekDayGantt) - 1)){
   processGanttWeekDay <- add_trace(processGanttWeekDay, type = "scatter",
@@ -360,7 +364,7 @@ for(i in 1:(nrow(weekDayGantt) - 1)){
                  mode = "lines",
                  line = list(
                    #color = paste0("rgba(", sample(1:255, 1),",", sample(1:255,1), ",", sample(1:255,1), ",1)"), width = 20),
-                   color = weekDayGantt$color[i], width = 25),
+                   color = weekDayGantt$color[i], width = 20),
                  name = weekDayGantt$PROCESS_NAME[i],
                  showlegend = F,
                  hoverinfo = "text",
@@ -380,8 +384,8 @@ processGanttWeekDay <- layout(processGanttWeekDay,
                       ", ", format(as.Date(weekDayGantt$COB_DATE[1]), "%d %b %Y"), "</b>"),
                       titlefont = list(family = "Montserrat, sans-serif", size = 16, color = 'rgb(0, 0, 0)'),
             xaxis = list(title = "", showgrid = T, tickfont = list(family = "Montserrat, sans-serif", size = 12, color = 'rgb(0, 0, 0)')),
-            yaxis = list(showgrid = T, tickfont = list(family = "Montserrat, sans-serif", size = 12, color = weekDayGantt$color),
-                         showticklabels = F),
+            yaxis = list(showgrid = T, tickfont = list(family = "Montserrat, sans-serif", size = 9, color = weekDayGantt$color),
+                         tickmode = "array", tickvals = 1:nrow(weekDayGantt), ticktext = weekDayGantt$PROCESS_NAME),
             legend = list(font = list(size = 10, family = "Montserrat, sans-serif")))
 
 
@@ -397,7 +401,7 @@ for(i in 1:(nrow(weekEndGantt) - 1)){
                  x = c(weekEndGantt$START_TIME[i] - 7200, weekEndGantt$END_TIME[i] - 7200),  # x0, x1
                  y = c(i, i),  # y0, y1
                  mode = "lines",
-                 line = list(color = weekEndGantt$color[i], width = 25),
+                 line = list(color = weekEndGantt$color[i], width = 20),
                  name = weekEndGantt$PROCESS_NAME[i],
                  showlegend = F,
                  hoverinfo = "text",
@@ -418,8 +422,8 @@ processGanttWeekEnd <- layout(processGanttWeekEnd,
                       ", ", format(as.Date(weekEndGantt$COB_DATE[1]), "%d %b %Y"), "</b>"),
                       titlefont = list(family = "Montserrat, sans-serif", size = 16, color = 'rgb(0, 0, 0)'),
                       xaxis = list(title = "", showgrid = T, tickfont = list(family = "Montserrat, sans-serif", size = 12, color = 'rgb(0, 0, 0)')),
-                      yaxis = list(showgrid = T, tickfont = list(family = "Montserrat, sans-serif", size = 12, color = weekEndGantt$color),
-                                   showticklabels = F),
+                      yaxis = list(showgrid = T, tickfont = list(family = "Montserrat, sans-serif", size = 9, color = weekEndGantt$color),
+                                   tickmode = "array", tickvals = 1:nrow(weekEndGantt), ticktext = weekEndGantt$PROCESS_NAME),
                       legend = list(font = list(size = 10, family = "Montserrat, sans-serif")))
 
 
@@ -477,7 +481,6 @@ controlWeekEndPlot <- phasePlot("Control", T, T, 200, "#22B14C")
 maintenWeekEndPlot <- phasePlot("Maintenance", T, T, 200, "#d62801")
 techWeekEndPlot <- phasePlot("Technical", T, T, 200, "#22B14C")
 houseWeekEndPlot <- phasePlot("Housekeep", T, T, 200, "#d62801")
-
 
 ######################### Top 10 Process Plots per phase ###########################
 

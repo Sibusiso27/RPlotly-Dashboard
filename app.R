@@ -146,19 +146,19 @@ body <- dashboardBody(
                   div(class = "phasesPlots", plotlyOutput("houseWeekEndChart")))),
 
   #Weekday Gantt
-  fluidRow(div(style = "height:500px;margin-left:-20px;padding-top: 10px;margin-bottom: 10px;", 
+  fluidRow(div(style = "height:600px;margin-left:-20px;padding-top: 10px;margin-bottom: 10px;", 
                plotlyOutput("weekDayProcessGanttPlot"),
-               img(id = "legend2", src='legend.png', align = "center"))),
+               img(style = "vertical-align: bottom;margin-left: 15%;height: 17px;margin-top: 200px;", src='legend.png', align = "center"))),
   
   #Weekend Gantt
   fluidRow(div(style = "height:500px;margin-left:-20px;padding-top: 10px;margin-bottom: 10px;", 
                plotlyOutput("weekEndProcessGanttPlot"),
-               img(id = "legend2", src='legend.png', align = "center"))),
+               img(style = "vertical-align: bottom;margin-left: 15%;height: 17px;margin-top: 100px;", src='legend.png', align = "center"))),
   
   #Bubble
   fluidRow(column(12,
                   div(style = "height:400px;margin-left:-20px;padding-top: 10px;margin-bottom: 10px;", plotlyOutput("bubbleChart"),
-                      img(id = "legend3", src='legend.png', align = "center"))))
+                      img(style = "vertical-align: middle;margin-top: -15px;margin-left: 15%;height: 17px;", src='legend.png', align = "center"))))
 )
 
 ############### ----- UI ----- ############
